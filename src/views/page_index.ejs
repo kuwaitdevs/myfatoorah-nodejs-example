@@ -1,0 +1,237 @@
+<div class="col-lg-8 mx-auto p-4 py-md-5">
+    <main>
+        <h1 class="text-body-emphasis">About</h1>
+        <p class="fs-5 col-md-8">
+            <img class="img-fluid" width="200" src="img/myfatoorah.jpg" /><br />
+            Example of MyFatoorah implementation in Node.js. Refer to below links for examples on how to execute a
+            payment, send a payment link and refund a payment using MyFatoorah. Make sure to update .env.example with
+            your API Token and then rename it to .env to perform a real transaction.
+        </p>
+
+        <hr class="col-3 col-md-2 mb-5" />
+
+        <div class="row g-5">
+            <div class="col-md-6">
+                <h2 class="text-body-emphasis">Actions</h2>
+                <ul class="list-unstyled">
+                    <li class="">
+                        <a href="#" class="icon-link mb-1" id="btnOffCanvasApiConfig">
+                            <i class="bi bi-arrow-right-circle-fill"></i>API Config
+                        </a>
+                    </li>
+                    <li class="">
+                        <a class="icon-link mb-1" href="/myfatoorah/payment/list">
+                            <i class="bi bi-arrow-right-circle-fill"></i>Payments List
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" href="/myfatoorah/payment/execute">
+                            <i class="bi bi-arrow-right-circle-fill"></i>Execute Payment / Send Payment Link
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" href="/myfatoorah/payment/inspect"
+                            ><i class="bi bi-arrow-right-circle-fill"></i> Payment Inspector
+                        </a>
+                    </li>
+
+                    <li class="">
+                        <a class="icon-link mb-1" href="/myfatoorah/refund/execute">
+                            <i class="bi bi-arrow-right-circle-fill"></i>Make a refund
+                        </a>
+                    </li>
+
+                    <li class="">
+                        <a class="icon-link mb-1" href="/myfatoorah/refund/status">
+                            <i class="bi bi-arrow-right-circle-fill"></i>Get refund status
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-md-6">
+                <h2 class="text-body-emphasis">References</h2>
+                <ul class="list-unstyled ps-0">
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://docs.myfatoorah.com/docs/overview">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            MyFatoorah Docs
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            class="icon-link mb-1"
+                            target="_blank"
+                            href="https://apitest.myfatoorah.com/swagger/ui/index"
+                        >
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            MyFatoorah Swagger Docs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://json2html.com/">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            json2html
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="/docs/5.3/getting-started/webpack/">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            Bootstrap
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://ngrok.com/use-cases/webhook-testing">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            NGrock
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-md-6">
+                <h2 class="text-body-emphasis">Packages</h2>
+                <ul class="list-unstyled ps-0">
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://nodejs.org/en/blog/release/v22.6.0">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            Node v22.6.0
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://www.npmjs.com/package/node-json-db">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            node-json-db
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://www.npmjs.com/package/express">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            express
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            class="icon-link mb-1"
+                            target="_blank"
+                            href="https://www.npmjs.com/package/express-ejs-layouts"
+                        >
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            express-ejs-layouts
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://www.npmjs.com/package/ejs">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            ejs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+</div>
+<div class="offcanvas offcanvas-end" id="offcanvasArea" aria-labelledby="offcanvasAreaLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasAreaLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="offcanvasAreaBody"></div>
+</div>
+<script>
+    const data = <%- JSON.stringify(data) %>;
+</script>
+<script>
+    const btnOffCanvasApiConfig = document.getElementById("btnOffCanvasApiConfig");
+
+    const offcanvasArea = document.getElementById("offcanvasArea");
+    const offcanvasAreaLabel = document.getElementById("offcanvasAreaLabel");
+    const offcanvasAreaBody = document.getElementById("offcanvasAreaBody");
+    const bsOffcanvas = new bootstrap.Offcanvas(offcanvasArea, {});
+    bsOffcanvas.hide();
+
+    btnOffCanvasApiConfig.addEventListener("click", () => {
+        const selectCountryId = GUID();
+        const selectLangId = GUID();
+        const txtCallBackUrlId = GUID();
+        const txtUserDefinedFieldId = GUID();
+
+        offcanvasAreaLabel.innerHTML = `API Config`;
+        offcanvasAreaBody.innerHTML = `
+            <div class="form-floating mb-2">
+                <select class="form-select" id="${selectCountryId}"></select>
+                <label for="${selectCountryId}">Country</label>
+            </div>
+            <div class="form-floating mb-2">
+                <select class="form-select" id="${selectLangId}">
+                </select>
+                <label for="${selectLangId}">Language</label>
+            </div>
+            <div class="input-group mb-2">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="${txtCallBackUrlId}" placeholder="CallBack Url" />
+                    <label for="${txtCallBackUrlId}">CallBack root URL (success and error)</label>
+                </div>
+            </div>
+            <div class="mb-2 form-floating">
+                <input
+                    type="email"
+                    class="form-control"
+                    id="${txtUserDefinedFieldId}"
+                    placeholder="User Defined Field"
+                />
+                <label for="${txtUserDefinedFieldId}">User Defined Field</label>
+            </div>
+            <a href="https://dashboard.ngrok.com/get-started/setup" class="form-text">
+                Place your ngrock root URL here.
+            </a>`;
+        const defaultCountryId = localStorage.getItem("countryId");
+        const defaultLanguageId = localStorage.getItem("langId");
+        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
+        const defaultUdf = localStorage.getItem("udf");
+
+        const selectCountry = document.getElementById(selectCountryId);
+        const selectLanguage = document.getElementById(selectLangId);
+        const txtCallBackUrl = document.getElementById(txtCallBackUrlId);
+        const txtUserDefinedField = document.getElementById(txtUserDefinedFieldId);
+
+        txtCallBackUrl.value = defaultCallbackUrl || "";
+        txtUserDefinedField.value = defaultUdf || "";
+
+        data.countries.forEach((country) => {
+            const opt = document.createElement("option");
+            opt.text = country.label;
+            opt.value = country.id;
+            opt.selected = defaultCountryId === country.id;
+            selectCountry.appendChild(opt);
+        });
+
+        data.languages.forEach((lang) => {
+            const opt = document.createElement("option");
+            opt.text = lang.label;
+            opt.value = lang.id;
+            opt.selected = defaultLanguageId === lang.id;
+            selectLanguage.appendChild(opt);
+        });
+
+        selectLanguage.addEventListener("change", () => {
+            const langId = selectLanguage[selectLanguage.selectedIndex].value;
+            localStorage.setItem("langId", langId);
+        });
+
+        selectCountry.addEventListener("change", () => {
+            const countryId = selectCountry[selectCountry.selectedIndex].value;
+            localStorage.setItem("countryId", countryId);
+        });
+
+        txtCallBackUrl.addEventListener("change", () => {
+            localStorage.setItem("callbackUrl", txtCallBackUrl.value);
+        });
+
+        txtUserDefinedField.addEventListener("change", () => {
+            localStorage.setItem("udf", txtUserDefinedField.value);
+        });
+
+        bsOffcanvas.show();
+    });
+</script>

@@ -1,0 +1,105 @@
+<div class="container">
+    <div class="row mt-5 pt-3">
+        <div class="col-12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Invoice ID<br />Payment ID</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Action</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody id="tablePayments"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const data = <%- JSON.stringify(data) %>;
+</script>
+<script>
+    const tablePayments = document.getElementById("tablePayments");
+    const payments = data.paymentsList;
+
+    if (payments && payments.length > 0) {
+        for (let i = 0; i < payments.length; i++) {
+            const record = payments[i];
+            tablePayments.appendChild(tmplRow({ record }));
+
+            const btnRefresh = document.getElementById(`btnRefresh_${record.id}`);
+
+            btnRefresh?.addEventListener("click", async () => {
+                const paymentMethodsRes = await putRequest({
+                    url: "/api/v1/myfatoorah/payment/status",
+                    queryParams: "",
+                    data: {
+                        key: record.id,
+                        keyType: "InvoiceId"
+                    }
+                });
+                const body = await paymentMethodsRes.json();
+                if (paymentMethodsRes.ok) {
+                    window.location.reload();
+                }
+            });
+        }
+    }
+
+    function tmplRow({ record }) {
+        let tblClass = "";
+        let actionDetails = "";
+        let createdAt = new Date(record.createdAt).toLocaleString();
+        let paidAt = "";
+        let type = "";
+        let tmplStatus = "";
+
+        const tr = document.createElement("tr");
+
+        if (record.response?.InvoiceStatus === "Paid") {
+            tmplStatus = `<button class="btn">${record.response?.InvoiceStatus}</button>`;
+            paidAt = new Date(record.response.CreatedDate).toLocaleString();
+            tblClass = "table-success";
+        } else if (record.response?.InvoiceStatus === "Canceled") {
+            tmplStatus = `<button class="btn">${record.response?.InvoiceStatus}</button>`;
+            tblClass = "table-danger";
+        } else {
+            tmplStatus = `<button id="btnRefresh_${record.id}" class="btn btn-link">${record.response?.InvoiceStatus} 🔄</button>`;
+            tblClass = "table-warning";
+        }
+
+        if (record.action?.executed) {
+            actionDetails = `Done`;
+        } else {
+            actionDetails = "Pending";
+        }
+
+        if (record.type === "link") {
+            type = `<a target="_blank" href="${record.request.InvoiceURL}">Invoice Link</a>`;
+        } else {
+            type = `<a target="_blank" href="${record.request.PaymentURL}">Payment Link</a>`;
+        }
+
+        tr.innerHTML = `
+            <td class="${tblClass}">${record.no}</td>
+            <td class="${tblClass}">${type}</td>
+            <td class="${tblClass}">${record.id}<br/>${record.PaymentId || ""}</td>
+            <td class="${tblClass}">
+                Name: ${record.response?.CustomerName || ""}<br/>
+                Email: ${record.response?.CustomerEmail || ""}<br/>
+                Mobile: ${record.response?.CustomerMobile || ""}
+            </td>
+            <td class="${tblClass}">${tmplStatus}</td>
+            <td class="${tblClass}">${record.response?.InvoiceDisplayValue || ""}</td>
+            <td class="${tblClass}">${actionDetails}</td>
+            <td class="${tblClass}">Created: ${createdAt}<br/>Paid: ${paidAt}</td>
+            `;
+
+        return tr;
+    }
+</script>

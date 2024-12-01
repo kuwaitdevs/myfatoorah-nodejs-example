@@ -1,0 +1,24 @@
+{
+    "name": "myfatoorah-nodejs-example",
+    "version": "1.0.0",
+    "description": "Minimal example of integrating myfatoorah with Nodejs",
+    "main": "index.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "ejs": "^3.1.10",
+        "express": "^4.19.2",
+        "express-ejs-layouts": "^2.5.1",
+        "node-json-db": "^2.3.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.4",
+        "sass": "^1.69.5"
+    }
+}

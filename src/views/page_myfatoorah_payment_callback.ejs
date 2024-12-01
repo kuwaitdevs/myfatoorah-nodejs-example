@@ -1,0 +1,79 @@
+<div class="container">
+    <div class="row mt-5 pt-3">
+        <div class="col-12 col-md-12 col-lg-5 mx-auto text-center mt-3" id="areaResponse"></div>
+    </div>
+</div>
+<script>
+    const data = <%- JSON.stringify(data) %>;
+</script>
+<script>
+    const areaResponse = document.getElementById("areaResponse");
+
+    let tableItems = [
+        {
+            label: "Payment ID",
+            value: data.paymentId
+        }
+    ];
+
+    const main = async () => {
+        if (!data.ok) {
+            const h2 = document.createElement("h2");
+            h2.classList.add("mt-5", "mb-5");
+            h2.innerText = data.message;
+            areaResponse.appendChild(h2);
+            renderTable({ captured: false });
+        }
+
+        const paymentMethodsRes = await putRequest({
+            url: "/api/v1/myfatoorah/payment/status",
+            queryParams: "",
+            data: {
+                key: data.paymentId,
+                keyType: "PaymentId"
+            }
+        });
+        const body = await paymentMethodsRes.json();
+        if (!paymentMethodsRes.ok) {
+            alert(body.data?.message);
+            return;
+        }
+
+        const h2 = document.createElement("h2");
+        h2.classList.add("mt-5", "mb-5");
+        h2.innerText = body.data.message;
+        areaResponse.appendChild(h2);
+
+        tableItems = [...tableItems, ...body.data.invoiceItems];
+        renderTable({ captured: body.captured });
+    };
+    main();
+
+    function renderTable({ captured }) {
+        const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
+        const tableType = captured ? "table-warning" : "table-success";
+
+        table.classList.add("table", "table-striped", tableType);
+
+        tableItems.forEach((item) => {
+            const tr = document.createElement("tr");
+            const td1 = document.createElement("td");
+            const td2 = document.createElement("td");
+
+            td1.classList.add("w-50", "text-start", tableType);
+            td2.classList.add("w-50", "text-start", tableType);
+
+            td1.innerText = item.label;
+            td2.innerText = item.value;
+
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        areaResponse.appendChild(table);
+    }
+</script>

@@ -1,0 +1,440 @@
+<div class="row">
+    <div class="col-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Customer Details</h5>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtCustomerName" placeholder="Customer Name" />
+                    <label for="txtCustomerName">Customer Name</label>
+                </div>
+                <div class="input-group mb-2">
+                    <span class="input-group-text phoneCode"></span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="txtCustomerMobile" />
+                        <label for="txtCustomerMobile">Customer Mobile</label>
+                    </div>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtCustomerEmail" placeholder="Customer Email" />
+                    <label for="txtCustomerEmail">Customer Email</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="txtCustomerReference"
+                        placeholder="Customer Reference"
+                    />
+                    <label for="txtCustomerReference">Customer Reference</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtCustomerCivilId" placeholder="Customer CivilId" />
+                    <label for="txtCustomerCivilId">Customer CivilId</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Customer Address</h5>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtBlock" placeholder="Block" />
+                    <label for="txtBlock">Block</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtStreet" placeholder="Street" />
+                    <label for="txtStreet">Street</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtHouseBuildingNo" placeholder="House Building No" />
+                    <label for="txtHouseBuildingNo">House Building No</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="txtAddressInstructions"
+                        placeholder="Address Instructions"
+                    />
+                    <label for="txtAddressInstructions">Address Instructions</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Invoice Items
+                    <a id="btnAddInvoiceItem" href="#" class="float-end text-success"
+                        ><i class="bi bi-plus-circle-fill"></i>
+                    </a>
+                </h5>
+                <div class="input-group mb-2">
+                    <div class="form-floating">
+                        <input readonly type="text" class="form-control" id="txtInvoiceValue" value="0" />
+                        <label for="txtInvoiceValue">Total Value (Invoice Value)</label>
+                    </div>
+                    <span class="input-group-text currencyCode"></span>
+                </div>
+                <div id="listInvoiceItems"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Actions</h5>
+                <button id="btnInitiatePayment" type="button" class="btn btn-primary">
+                    Initiate Payment (Proceed to payment)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-12"></div>
+</div>
+
+<div class="modal fade" id="modalArea" tabindex="-1" aria-labelledby="modalAreaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title h5" id="modalAreaLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalAreaBody"></div>
+        </div>
+    </div>
+</div>
+<script>
+    const data = <%- JSON.stringify(data) %>;
+</script>
+<script>
+    const txtCustomerName = document.getElementById("txtCustomerName");
+    const txtCustomerMobile = document.getElementById("txtCustomerMobile");
+    const txtInvoiceValue = document.getElementById("txtInvoiceValue");
+    const txtCustomerReference = document.getElementById("txtCustomerReference");
+    const txtCustomerCivilId = document.getElementById("txtCustomerCivilId");
+    const txtUserDefinedField = document.getElementById("txtUserDefinedField");
+    const txtCallBackUrl = document.getElementById("txtCallBackUrl");
+    const txtErrorUrl = document.getElementById("txtErrorUrl");
+    const txtCustomerEmail = document.getElementById("txtCustomerEmail");
+
+    const txtCustomerAddress = document.getElementById("txtCustomerAddress");
+    const txtBlock = document.getElementById("txtBlock");
+    const txtStreet = document.getElementById("txtStreet");
+    const txtHouseBuildingNo = document.getElementById("txtHouseBuildingNo");
+    const txtAddressInstructions = document.getElementById("txtAddressInstructions");
+
+    const btnInitiatePayment = document.getElementById("btnInitiatePayment");
+
+    const btnAddInvoiceItem = document.getElementById("btnAddInvoiceItem");
+    const listInvoiceItems = document.getElementById("listInvoiceItems");
+
+    let INVOICE_ITEMS = [];
+
+    const modalArea = document.getElementById("modalArea");
+    const modalAreaBody = document.getElementById("modalAreaBody");
+    const modalAreaLabel = document.getElementById("modalAreaLabel");
+    const bsModal = new bootstrap.Modal(modalArea, {});
+    bsModal.hide();
+
+    const main = async () => {
+        const defaultLanguageId = localStorage.getItem("langId");
+        if (!defaultLanguageId) {
+            localStorage.setItem("langId", "EN");
+        }
+
+        const defaultCountryId = localStorage.getItem("countryId");
+        if (!defaultCountryId) {
+            localStorage.setItem("countryId", "KWT");
+        }
+
+        updateCountryConfig();
+
+        btnAddInvoiceItem.addEventListener("click", () => {
+            const item = {
+                GUID: GUID(),
+                ItemName: "",
+                Quantity: 0,
+                UnitPrice: 0
+            };
+
+            INVOICE_ITEMS.push(item);
+            listInvoiceItems.appendChild(tmplInvoiceItem({ item }));
+            updateCountryConfig();
+
+            const btnRemoveItem = document.getElementById(`btnRemoveInvoiceItem_${item.GUID}`);
+            const txtItemName = document.getElementById(`txtItemName_${item.GUID}`);
+            const txtItemQuantity = document.getElementById(`txtItemQuantity_${item.GUID}`);
+            const txtItemUnitPrice = document.getElementById(`txtItemUnitPrice_${item.GUID}`);
+
+            txtItemName.addEventListener("change", () => {
+                item.ItemName = txtItemName.value;
+            });
+
+            txtItemQuantity.addEventListener("change", () => {
+                item.Quantity = Number(txtItemQuantity.value);
+                updateInvoiceTotal();
+            });
+
+            txtItemUnitPrice.addEventListener("change", () => {
+                item.UnitPrice = Number(txtItemUnitPrice.value);
+                updateInvoiceTotal();
+            });
+
+            btnRemoveItem.addEventListener("click", () => {
+                INVOICE_ITEMS = INVOICE_ITEMS.filter((x) => x.GUID !== item.GUID);
+                document.getElementById(`areaItem_${item.GUID}`).remove();
+                updateInvoiceTotal();
+            });
+        });
+
+        btnInitiatePayment.addEventListener("click", async () => {
+            const defaultCountryId = localStorage.getItem("countryId");
+
+            if (INVOICE_ITEMS.length === 0) {
+                alert("Please add at least one item");
+                return;
+            }
+
+            const invoiceValue = INVOICE_ITEMS.reduce((acc, x) => {
+                return acc + x.UnitPrice * x.Quantity;
+            }, 0);
+
+            if (invoiceValue === 0) {
+                alert("Total value must be greater than 0");
+                return;
+            }
+
+            const paymentMethodsRes = await postRequest({
+                url: "/api/v1/myfatoorah/payment/init",
+                queryParams: "",
+                data: {
+                    countryId: defaultCountryId,
+                    invoiceAmount: invoiceValue
+                }
+            });
+
+            const body = await paymentMethodsRes.json();
+            const listPaymentMethods = body.data;
+
+            //modalArea.children[0].classList.add("modal-xl");
+            const listPmtMethodsId = GUID();
+            modalAreaLabel.innerHTML = `Select Payment Method`;
+            modalAreaBody.innerHTML = `
+            <ul class="list-group mb-3" id="${listPmtMethodsId}"></ul>
+            <button id="btnExecutePayment" type="button" class="btn btn-primary">Execute Payment</button>
+            <button id="btnSendPaymentLink" type="button" class="btn btn-primary">Send Payment Link</button>
+            `;
+
+            const listPmtMethods = document.getElementById(listPmtMethodsId);
+            let selectedPaymentMethod = null;
+
+            for (let i = 0; i < listPaymentMethods.length; i++) {
+                const pmtMethod = listPaymentMethods[i];
+                pmtMethod.GUID = GUID();
+                const li = document.createElement("li");
+                li.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+                li.innerHTML = `
+                <div>
+                    <input class="form-check-input me-1" type="radio" name="pmtmethods" value="${pmtMethod.PaymentMethodId}" id="${pmtMethod.GUID}">
+                    <label class="form-check-label" for="${pmtMethod.GUID}">
+                        <img width="50" src="${pmtMethod.ImageUrl}" class="me-2" />
+                        ${pmtMethod.PaymentMethodEn}
+                    </label>
+                </div>
+                <span class="badge text-bg-primary rounded-pill">${pmtMethod.TotalAmount} ${pmtMethod.CurrencyIso}</span>`;
+                listPmtMethods.appendChild(li);
+
+                li.addEventListener("click", () => {
+                    selectedPaymentMethod = { ...pmtMethod };
+                });
+            }
+
+            bsModal.show();
+
+            const btnExecutePayment = document.getElementById("btnExecutePayment");
+            const btnSendPaymentLink = document.getElementById("btnSendPaymentLink");
+
+            btnExecutePayment.removeEventListener("click", null, false);
+            btnSendPaymentLink.removeEventListener("click", null, false);
+
+            btnSendPaymentLink.addEventListener("click", () => {
+                sendPaymentLink({ pmtMethod: selectedPaymentMethod });
+            });
+
+            btnExecutePayment.addEventListener("click", () => {
+                executePayment({ pmtMethod: selectedPaymentMethod });
+            });
+        });
+    };
+    main();
+
+    async function sendPaymentLink({ pmtMethod }) {
+        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
+
+        if (!defaultCallbackUrl) {
+            const ok = confirm(
+                "No callback url set. This will mean you need to check payment status manually. Continue?"
+            );
+            if (!ok) return;
+        }
+
+        const customerEmail = txtCustomerEmail.value;
+        const customerName = txtCustomerName.value;
+        const customerMobile = txtCustomerMobile.value;
+        const invoiceValue = txtInvoiceValue.value;
+        const customerReference = txtCustomerReference.value;
+        const countryId = localStorage.getItem("countryId");
+        const language = localStorage.getItem("langId");
+        const userDefinedField = localStorage.getItem("udf");
+
+        if (!customerMobile || !customerName) {
+            alert("Please add customer mobile and name");
+            return;
+        }
+
+        let paymentPayload = {
+            paymentMethodId: pmtMethod.PaymentMethodId,
+            customerName,
+            customerMobile,
+            customerEmail,
+            invoiceItems: [...INVOICE_ITEMS],
+            invoiceValue,
+            customerReference,
+            countryId,
+            language,
+            userDefinedField,
+            callBackUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/success` : "",
+            errorUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/error` : ""
+        };
+
+        const executeRes = await postRequest({
+            url: "/api/v1/myfatoorah/payment/send",
+            queryParams: "",
+            data: paymentPayload
+        });
+
+        const executeBody = await executeRes.json();
+
+        if (executeRes.ok) {
+            modalAreaBody.innerHTML = `
+            <div class="alert alert-success" role="alert">
+                Invoice URL Sent.
+            </div><br/>
+            Invoice URL: <a href="${executeBody.data.pmtLink}">${executeBody.data.pmtLink}</a>
+            `;
+        }
+    }
+
+    async function executePayment({ pmtMethod }) {
+        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
+
+        if (!defaultCallbackUrl) {
+            const ok = confirm(
+                "No callback url set. This will mean you need to check payment status manually. Continue?"
+            );
+            if (!ok) return;
+        }
+
+        const customerEmail = txtCustomerEmail.value;
+        const customerName = txtCustomerName.value;
+        const customerMobile = txtCustomerMobile.value;
+        const invoiceValue = txtInvoiceValue.value;
+        const customerReference = txtCustomerReference.value;
+        const countryId = localStorage.getItem("countryId");
+        const language = localStorage.getItem("langId");
+        const userDefinedField = localStorage.getItem("udf");
+
+        let paymentPayload = {
+            paymentMethodId: pmtMethod.PaymentMethodId,
+            customerName,
+            customerMobile,
+            customerEmail,
+            invoiceItems: [...INVOICE_ITEMS],
+            invoiceValue,
+            customerReference,
+            countryId,
+            language,
+            userDefinedField,
+            callBackUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/success` : "",
+            errorUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/error` : ""
+        };
+
+        const executeRes = await postRequest({
+            url: "/api/v1/myfatoorah/payment/execute",
+            queryParams: "",
+            data: paymentPayload
+        });
+
+        const executeBody = await executeRes.json();
+
+        if (executeRes.ok) {
+            window.location = executeBody.data.pmtLink;
+        }
+    }
+
+    function updateCountryConfig() {
+        const defaultCountryId = localStorage.getItem("countryId");
+
+        const country = data.countries.find((x) => x.id === defaultCountryId);
+        {
+            const items = document.getElementsByClassName("currencyCode");
+            for (let i = 0; i < items.length; i++) {
+                items[i].textContent = country.currency;
+            }
+        }
+
+        {
+            const items = document.getElementsByClassName("phoneCode");
+            for (let i = 0; i < items.length; i++) {
+                items[i].textContent = country.phoneCode;
+            }
+        }
+    }
+
+    function updateInvoiceTotal() {
+        let total = 0;
+        if (INVOICE_ITEMS.length > 0) {
+            total = INVOICE_ITEMS.reduce((acc, x) => {
+                return acc + x.UnitPrice * x.Quantity;
+            }, 0);
+        }
+        txtInvoiceValue.value = total;
+    }
+
+    function tmplInvoiceItem({ item }) {
+        const elmRoot = document.createElement("div");
+        elmRoot.classList.add("card");
+        elmRoot.classList.add("mb-3");
+        elmRoot.id = `areaItem_${item.GUID}`;
+        elmRoot.innerHTML = `
+            <div class="card-body">
+                <div class="mb-3">
+                    <b>Invoice Item</b>
+                    <a id="btnRemoveInvoiceItem_${item.GUID}" href="#" class="float-end text-danger">
+                        <i class="bi bi-dash-circle-fill"></i>
+                    </a>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtItemName_${item.GUID}" placeholder="Item Name" />
+                    <label for="txtItemName_${item.GUID}" >Item Name</label>
+                </div>
+                <div class="mb-2 form-floating">
+                    <input type="text" class="form-control" id="txtItemQuantity_${item.GUID}" placeholder="Quantity" />
+                    <label for="txtItemQuantity_${item.GUID}" >Quantity</label>
+                </div>
+                <div class="input-group mb-2">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="txtItemUnitPrice_${item.GUID}" value="0" />
+                        <label for="txtItemUnitPrice_${item.GUID}">Unit Price</label>
+                    </div>
+                    <span class="input-group-text currencyCode"></span>
+                </div>
+            </div>`;
+
+        return elmRoot;
+    }
+</script>

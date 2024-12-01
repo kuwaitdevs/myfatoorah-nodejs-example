@@ -1,0 +1,61 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/1.3.0/json2html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.json2html/1.2.0/jquery.json2html.min.js"></script>
+
+<!-- Visualizer Core -->
+<link href="/css/visualizer.css" rel="stylesheet" />
+<script src="/js/visualizer.js"></script>
+
+<div class="container">
+    <div class="row mt-5 pt-3">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Inspect Payment</h5>
+                    <select class="form-select mb-2" id="ddPaymentReference">
+                        <option selected>Reference Type</option>
+                        <option value="InvoiceId">Invoice ID</option>
+                        <option value="PaymentId">Payment ID</option>
+                        <option value="CustomerReference">Customer Reference</option>
+                    </select>
+                    <div class="form-floating mb-2">
+                        <input type="text" class="form-control" id="txtReference" />
+                        <label for="txtReference">Reference</label>
+                    </div>
+                    <button id="btnCheckPayment" type="button" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Details</h5>
+                    <div id="areaDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const btnCheckPayment = document.getElementById("btnCheckPayment");
+    const ddPaymentReference = document.getElementById("ddPaymentReference");
+    const areaDetails = document.getElementById("areaDetails");
+
+    btnCheckPayment.addEventListener("click", async () => {
+        const keyType = ddPaymentReference[ddPaymentReference.selectedIndex].value;
+        const key = txtReference.value;
+
+        const paymentMethodsRes = await getRequest({
+            url: "/api/v1/myfatoorah/payment/inspect",
+            queryParams: {
+                key,
+                keyType
+            },
+            data: {}
+        });
+
+        const body = await paymentMethodsRes.json();
+        var _visualizer = new visualizer($("#areaDetails"));
+        _visualizer.visualize(body.data);
+    });
+</script>
