@@ -45,7 +45,10 @@
                 });
                 const body = await paymentMethodsRes.json();
                 if (paymentMethodsRes.ok) {
+                    alert(body.message || "Payment data refreshed successfully.");
                     window.location.reload();
+                } else {
+                    alert(body.message || "Failed to refresh payment data.");
                 }
             });
         }

@@ -5,20 +5,20 @@ const db = new JsonDB(new Config("localdb", true, false, '/'));
 exports.page_myfatoorah_payment_list = async (req, res, next) => {
     try {
 
-        const payments = await db.getData("/myfatoorah/payments");
+        let paymentsList = [];
 
-        const pmtIds = Object.keys(payments);
-
-        const paymentsList = [];
-
-        pmtIds.forEach((id, i) => {
-            paymentsList.push({
-                no: i + 1,
-                id, ...payments[id]
+        try {
+            const payments = await db.getData("/myfatoorah/payments");
+            const pmtIds = Object.keys(payments);
+            pmtIds.forEach((id, i) => {
+                paymentsList.push({
+                    no: i + 1,
+                    id, ...payments[id]
+                });
             });
-        });
-
-        console.log(paymentsList);
+        } catch (error) {
+            console.log(TAG, "No payments found in the database.");
+        }
 
         return res.render("page_myfatoorah_payment_list", {
             layout: "./inc_layout",
