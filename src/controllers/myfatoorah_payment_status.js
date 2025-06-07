@@ -23,6 +23,8 @@ exports.myfatoorah_payment_status = async (req, res, next) => {
 
         const pmtBody = await pmtRes.json();
 
+        console.log(TAG, "pmtBody from myFatoorah", pmtBody);
+
         if (pmtBody.IsSuccess) {
             const invoiceId = pmtBody.Data.InvoiceId;
             const pmt = await db.getData(`/myfatoorah/payments/${invoiceId}`);
@@ -78,7 +80,7 @@ exports.myfatoorah_payment_status = async (req, res, next) => {
 
             return res.status(200).json({
                 data: {
-                    message: 'Payment Successful, Thank you!',
+                    message: 'Payment data refreshed and database record updated',
                     captured: pmtBody.Data.InvoiceStatus === 'Paid',
                     invoiceItems
                 }
