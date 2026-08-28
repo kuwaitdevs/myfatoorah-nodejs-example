@@ -117,8 +117,6 @@
     const txtCustomerReference = document.getElementById("txtCustomerReference");
     const txtCustomerCivilId = document.getElementById("txtCustomerCivilId");
     const txtUserDefinedField = document.getElementById("txtUserDefinedField");
-    const txtCallBackUrl = document.getElementById("txtCallBackUrl");
-    const txtErrorUrl = document.getElementById("txtErrorUrl");
     const txtCustomerEmail = document.getElementById("txtCustomerEmail");
 
     const txtCustomerAddress = document.getElementById("txtCustomerAddress");
@@ -262,26 +260,25 @@
             btnSendPaymentLink.removeEventListener("click", null, false);
 
             btnSendPaymentLink.addEventListener("click", () => {
-                sendPaymentLink({ pmtMethod: selectedPaymentMethod });
+                if (!selectedPaymentMethod) {
+                    alert("Please select a payment method");
+                    return;
+                }
+                sendPaymentLink();
             });
 
             btnExecutePayment.addEventListener("click", () => {
+                if (!selectedPaymentMethod) {
+                    alert("Please select a payment method");
+                    return;
+                }
                 executePayment({ pmtMethod: selectedPaymentMethod });
             });
         });
     };
     main();
 
-    async function sendPaymentLink({ pmtMethod }) {
-        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
-
-        if (!defaultCallbackUrl) {
-            const ok = confirm(
-                "No callback url set. This will mean you need to check payment status manually. Continue?"
-            );
-            if (!ok) return;
-        }
-
+    async function sendPaymentLink() {
         const customerEmail = txtCustomerEmail.value;
         const customerName = txtCustomerName.value;
         const customerMobile = txtCustomerMobile.value;
@@ -297,7 +294,6 @@
         }
 
         let paymentPayload = {
-            paymentMethodId: pmtMethod.PaymentMethodId,
             customerName,
             customerMobile,
             customerEmail,
@@ -306,9 +302,7 @@
             customerReference,
             countryId,
             language,
-            userDefinedField,
-            callBackUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/success` : "",
-            errorUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/error` : ""
+            userDefinedField
         };
 
         const executeRes = await postRequest({
@@ -330,15 +324,6 @@
     }
 
     async function executePayment({ pmtMethod }) {
-        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
-
-        if (!defaultCallbackUrl) {
-            const ok = confirm(
-                "No callback url set. This will mean you need to check payment status manually. Continue?"
-            );
-            if (!ok) return;
-        }
-
         const customerEmail = txtCustomerEmail.value;
         const customerName = txtCustomerName.value;
         const customerMobile = txtCustomerMobile.value;
@@ -358,9 +343,7 @@
             customerReference,
             countryId,
             language,
-            userDefinedField,
-            callBackUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/success` : "",
-            errorUrl: defaultCallbackUrl ? `${defaultCallbackUrl}/myfatoorah/callback/error` : ""
+            userDefinedField
         };
 
         const executeRes = await postRequest({

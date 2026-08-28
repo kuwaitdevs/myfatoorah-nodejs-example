@@ -1,13 +1,15 @@
 const TAG = "myfatoorah_payment_initiate";
 const { initiatePayment } = require('../integrations/my_fatoorah');
+const { validateCheckout } = require('../util/payment_validation');
 
 exports.myfatoorah_payment_initiate = async (req, res, next) => {
     try {
         const { body } = req;
         const { countryId, invoiceAmount } = body;
 
-        if (!invoiceAmount || !countryId) {
-            return res.status(400).json({ message: 'invalid data' });
+        const errors = validateCheckout({ invoiceValue: invoiceAmount, countryId });
+        if (errors.length > 0) {
+            return res.status(400).json({ message: errors.join(', ') });
         }
 
         console.log('user initiated pmt', invoiceAmount, countryId);

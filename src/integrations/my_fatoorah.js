@@ -1,11 +1,11 @@
 /*
-* Requires ENV VAR: MYFATOORAH_TOKEN
+* Requires MYFATOORAH_TOKEN_DEV in development and MYFATOORAH_TOKEN_PROD in production.
 */
 
 const TAG = 'my_fatoorah';
 
-const MYFATOORAH_DEV_API_URL = 'https://apitest.myfatoorah.com/';
-const MYFATOORAH_PROD_API_URL = 'https://api.myfatoorah.com/';
+const MYFATOORAH_DEV_API_URL = 'https://apitest.myfatoorah.com';
+const MYFATOORAH_PROD_API_URL = 'https://api.myfatoorah.com';
 
 const MYFATOORAH_NOTIFICATION_OPTION = [
     {
@@ -93,15 +93,32 @@ exports.MYFATOORAH_LANGUAGES = MYFATOORAH_LANGUAGES;
 exports.MYFATOORAH_NOTIFICATION_OPTION = MYFATOORAH_NOTIFICATION_OPTION;
 
 
-const getMayFatoorahApiBaseURL = () => {
+const getMyFatoorahApiBaseURL = () => {
+    if (process.env.MYFATOORAH_API_BASE_URL) {
+        return process.env.MYFATOORAH_API_BASE_URL.replace(/\/$/, '');
+    }
     return process.env.NODE_ENV === 'production' ? MYFATOORAH_PROD_API_URL : MYFATOORAH_DEV_API_URL;
 }
 
 const getToken = () => {
-    const testToken =
-        'rLtt6JWvbUHDDhsZnfpAhpYk4dxYDQkbcPTyGaKp2TYqQgG7FGZ5Th_WD53Oq8Ebz6A53njUoo1w3pjU1D4vs_ZMqFiz_j0urb_BH9Oq9VZoKFoJEDAbRZepGcQanImyYrry7Kt6MnMdgfG5jn4HngWoRdKduNNyP4kzcp3mRv7x00ahkm9LAK7ZRieg7k1PDAnBIOG3EyVSJ5kK4WLMvYr7sCwHbHcu4A5WwelxYK0GMJy37bNAarSJDFQsJ2ZvJjvMDmfWwDVFEVe_5tOomfVNt6bOg9mexbGjMrnHBnKnZR1vQbBtQieDlQepzTZMuQrSuKn-t5XZM7V6fCW7oP-uXGX-sMOajeX65JOf6XVpk29DP6ro8WTAflCDANC193yof8-f5_EYY-3hXhJj7RBXmizDpneEQDSaSz5sFk0sV5qPcARJ9zGG73vuGFyenjPPmtDtXtpx35A-BVcOSBYVIWe9kndG3nclfefjKEuZ3m4jL9Gg1h2JBvmXSMYiZtp9MR5I6pvbvylU_PP5xJFSjVTIz7IQSjcVGO41npnwIxRXNRxFOdIUHn0tjQ-7LwvEcTXyPsHXcMD8WtgBh-wxR8aKX7WPSsT1O8d8reb2aR7K3rkV3K82K_0OgawImEpwSvp9MNKynEAJQS6ZHe_J_l77652xwPNxMRTMASk1ZsJL';
-    return process.env.NODE_ENV === 'production' ? process.env.MYFATOORAH_TOKEN : testToken;
+    const token = process.env.NODE_ENV === 'production'
+        ? process.env.MYFATOORAH_TOKEN_PROD || process.env.MYFATOORAH_TOKEN
+        : process.env.MYFATOORAH_TOKEN_DEV || process.env.MYFATOORAH_TOKEN;
+
+    if (!token) {
+        throw new Error('Missing MyFatoorah API token for the current environment');
+    }
+    return token;
 }
+
+const getCountry = (countryId) => {
+    const country = MYFATOORAH_COUNTRIES.find((item) => item.id === countryId);
+    if (!country) throw new Error(`Unsupported country: ${countryId}`);
+    return country;
+};
+
+const detectPaymentKeyType = (key) => /^\d{15,}$/.test(String(key)) ? 'PaymentId' : 'InvoiceId';
+exports.detectPaymentKeyType = detectPaymentKeyType;
 
 /**
  * https://apitest.myfatoorah.com/swagger/ui/index#!/Payment/Payment_InitiatePayment
@@ -110,7 +127,8 @@ const getToken = () => {
  * @param invoiceAmount Number
  */
 exports.initiatePayment = async ({ countryId, invoiceAmount }) => {
-    const url = `${getMayFatoorahApiBaseURL()}/v2/InitiatePayment`;
+    const url = `${getMyFatoorahApiBaseURL()}/v2/InitiatePayment`;
+    const country = getCountry(countryId);
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -119,7 +137,7 @@ exports.initiatePayment = async ({ countryId, invoiceAmount }) => {
 
     const bodyRequestRaw = JSON.stringify({
         InvoiceAmount: invoiceAmount,
-        CurrencyIso: MYFATOORAH_COUNTRIES.find(x => x.id === countryId).currency
+        CurrencyIso: country.currency
     });
 
     const requestOptions = {
@@ -129,7 +147,7 @@ exports.initiatePayment = async ({ countryId, invoiceAmount }) => {
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 /**
@@ -163,7 +181,8 @@ exports.executePayment = async ({
     countryId,
     optional
 }) => {
-    let url = `${getMayFatoorahApiBaseURL()}/v2/ExecutePayment`;
+    let url = `${getMyFatoorahApiBaseURL()}/v2/ExecutePayment`;
+    const country = getCountry(countryId);
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -172,8 +191,8 @@ exports.executePayment = async ({
 
     let bodyRequest = {
         PaymentMethodId: paymentMethodId,
-        DisplayCurrencyIso: MYFATOORAH_COUNTRIES.find(x => x.id === countryId).currency,
-        MobileCountryCode: MYFATOORAH_COUNTRIES.find(x => x.id === countryId).phoneCode, // +965
+        DisplayCurrencyIso: country.currency,
+        MobileCountryCode: country.phoneCode,
         InvoiceValue: invoiceValue,
     };
 
@@ -190,7 +209,7 @@ exports.executePayment = async ({
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 /**
@@ -225,7 +244,8 @@ exports.sendPayment = async ({
 }
 ) => {
 
-    let url = `${getMayFatoorahApiBaseURL()}/v2/SendPayment`;
+    let url = `${getMyFatoorahApiBaseURL()}/v2/SendPayment`;
+    const country = getCountry(countryId);
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -236,8 +256,8 @@ exports.sendPayment = async ({
         NotificationOption: notificationOption,
         CustomerName: customerName,
         InvoiceValue: invoiceValue,
-        DisplayCurrencyIso: MYFATOORAH_COUNTRIES.find(x => x.id === countryId).currency,
-        MobileCountryCode: MYFATOORAH_COUNTRIES.find(x => x.id === countryId).phoneCode,
+        DisplayCurrencyIso: country.currency,
+        MobileCountryCode: country.phoneCode,
     };
 
     if (optional) {
@@ -253,7 +273,7 @@ exports.sendPayment = async ({
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 
@@ -265,8 +285,8 @@ exports.sendPayment = async ({
  * @param key String
  * @param keyType InvoiceId | PaymentId | CustomerReference
  */
-exports.getPaymentStatus = async ({ key, keyType }) => {
-    let url = `${getMayFatoorahApiBaseURL()}/v2/GetPaymentStatus`;
+exports.getPaymentStatus = async ({ key, keyType = detectPaymentKeyType(key) }) => {
+    let url = `${getMyFatoorahApiBaseURL()}/v2/GetPaymentStatus`;
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -284,7 +304,7 @@ exports.getPaymentStatus = async ({ key, keyType }) => {
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 
@@ -299,25 +319,14 @@ exports.getPaymentStatus = async ({ key, keyType }) => {
  * @param optional.amountDeductedFromSupplier Number
  */
 exports.makeRefund = async ({ refundRequest }) => {
-    let url = `${getMayFatoorahApiBaseURL()}/v2/MakeRefund`;
+    const url = `${getMyFatoorahApiBaseURL()}/v2/MakeRefund`;
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     headers.append("Authorization", `Bearer ${getToken()}`);
     headers.append("Accept", 'application/json');
 
-    const bodyRequest = {
-        Key: key,
-        KeyType: keyType,
-        ServiceChargeOnCustomer: serviceChargeOnCustomer,
-        Amount: amount
-    };
-
-    if (optional) {
-        bodyRequest = { ...bodyRequest, ...optional };
-    }
-
-    const bodyRequestRaw = JSON.stringify(bodyRequest);
+    const bodyRequestRaw = JSON.stringify(refundRequest);
 
     const requestOptions = {
         method: "POST",
@@ -326,7 +335,7 @@ exports.makeRefund = async ({ refundRequest }) => {
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 /**
@@ -336,23 +345,17 @@ exports.makeRefund = async ({ refundRequest }) => {
  * @param keyType "InvoiceId" | "RefundReference" | "RefundId"
  */
 exports.getRefundStatus = async ({ key, keyType }) => {
-    let url = `${getMayFatoorahApiBaseURL()}/v2/GetRefundStatus`;
+    const url = `${getMyFatoorahApiBaseURL()}/v2/GetRefundStatus`;
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     headers.append("Authorization", `Bearer ${getToken()}`);
     headers.append("Accept", 'application/json');
 
-    const bodyRequest = {
+    const bodyRequestRaw = JSON.stringify({
         Key: key,
         KeyType: keyType
-    };
-
-    if (optional) {
-        bodyRequest = { ...bodyRequest, ...optional };
-    }
-
-    const bodyRequestRaw = JSON.stringify(bodyRequest);
+    });
 
     const requestOptions = {
         method: "POST",
@@ -361,7 +364,7 @@ exports.getRefundStatus = async ({ key, keyType }) => {
         credentials: "include",
     };
 
-    return fetch(url, requestOptions).catch((error) => console.log(TAG, 'error', "api-error", error.message));
+    return fetch(url, requestOptions);
 }
 
 /*

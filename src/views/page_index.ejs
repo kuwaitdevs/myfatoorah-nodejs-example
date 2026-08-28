@@ -4,8 +4,8 @@
         <p class="fs-5 col-md-8">
             <img class="img-fluid" width="200" src="img/myfatoorah.jpg" /><br />
             Example of MyFatoorah implementation in Node.js. Refer to below links for examples on how to execute a
-            payment, send a payment link and refund a payment using MyFatoorah. Make sure to update .env.example with
-            your API Token and then rename it to .env to perform a real transaction.
+            payment, send a payment link and refund a payment using MyFatoorah. Copy .env.example to .env and add
+            your API token before performing a transaction.
         </p>
 
         <hr class="col-3 col-md-2 mb-5" />
@@ -59,6 +59,18 @@
                         </a>
                     </li>
                     <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://docs.myfatoorah.com/docs/api-key">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            API Key and Test Token
+                        </a>
+                    </li>
+                    <li>
+                        <a class="icon-link mb-1" target="_blank" href="https://docs.myfatoorah.com/docs/test-cards">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            Test Cards
+                        </a>
+                    </li>
+                    <li>
                         <a
                             class="icon-link mb-1"
                             target="_blank"
@@ -75,15 +87,19 @@
                         </a>
                     </li>
                     <li>
-                        <a class="icon-link mb-1" target="_blank" href="/docs/5.3/getting-started/webpack/">
+                        <a
+                            class="icon-link mb-1"
+                            target="_blank"
+                            href="https://getbootstrap.com/docs/5.3/getting-started/webpack/"
+                        >
                             <i class="bi bi-arrow-right-circle-fill"></i>
                             Bootstrap
                         </a>
                     </li>
                     <li>
-                        <a class="icon-link mb-1" target="_blank" href="https://ngrok.com/use-cases/webhook-testing">
+                        <a class="icon-link mb-1" target="_blank" href="https://ngrok.com/docs/getting-started/">
                             <i class="bi bi-arrow-right-circle-fill"></i>
-                            NGrock
+                            ngrok
                         </a>
                     </li>
                 </ul>
@@ -93,9 +109,9 @@
                 <h2 class="text-body-emphasis">Packages</h2>
                 <ul class="list-unstyled ps-0">
                     <li>
-                        <a class="icon-link mb-1" target="_blank" href="https://nodejs.org/en/blog/release/v22.6.0">
+                        <a class="icon-link mb-1" target="_blank" href="https://nodejs.org/en/download/">
                             <i class="bi bi-arrow-right-circle-fill"></i>
-                            Node v22.6.0
+                            Node.js 18+
                         </a>
                     </li>
                     <li>
@@ -153,7 +169,6 @@
     btnOffCanvasApiConfig.addEventListener("click", () => {
         const selectCountryId = GUID();
         const selectLangId = GUID();
-        const txtCallBackUrlId = GUID();
         const txtUserDefinedFieldId = GUID();
 
         offcanvasAreaLabel.innerHTML = `API Config`;
@@ -167,12 +182,6 @@
                 </select>
                 <label for="${selectLangId}">Language</label>
             </div>
-            <div class="input-group mb-2">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="${txtCallBackUrlId}" placeholder="CallBack Url" />
-                    <label for="${txtCallBackUrlId}">CallBack root URL (success and error)</label>
-                </div>
-            </div>
             <div class="mb-2 form-floating">
                 <input
                     type="email"
@@ -182,20 +191,15 @@
                 />
                 <label for="${txtUserDefinedFieldId}">User Defined Field</label>
             </div>
-            <a href="https://dashboard.ngrok.com/get-started/setup" class="form-text">
-                Place your ngrock root URL here.
-            </a>`;
+            <p class="form-text">Callback URLs are configured securely with the server-side APP_BASE_URL environment variable.</p>`;
         const defaultCountryId = localStorage.getItem("countryId");
         const defaultLanguageId = localStorage.getItem("langId");
-        const defaultCallbackUrl = localStorage.getItem("callbackUrl");
         const defaultUdf = localStorage.getItem("udf");
 
         const selectCountry = document.getElementById(selectCountryId);
         const selectLanguage = document.getElementById(selectLangId);
-        const txtCallBackUrl = document.getElementById(txtCallBackUrlId);
         const txtUserDefinedField = document.getElementById(txtUserDefinedFieldId);
 
-        txtCallBackUrl.value = defaultCallbackUrl || "";
         txtUserDefinedField.value = defaultUdf || "";
 
         data.countries.forEach((country) => {
@@ -222,10 +226,6 @@
         selectCountry.addEventListener("change", () => {
             const countryId = selectCountry[selectCountry.selectedIndex].value;
             localStorage.setItem("countryId", countryId);
-        });
-
-        txtCallBackUrl.addEventListener("change", () => {
-            localStorage.setItem("callbackUrl", txtCallBackUrl.value);
         });
 
         txtUserDefinedField.addEventListener("change", () => {

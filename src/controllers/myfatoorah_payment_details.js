@@ -1,13 +1,15 @@
 const TAG = "myfatoorah_payment_details";
 const { getPaymentStatus } = require('../integrations/my_fatoorah');
+const { validateStatusKey } = require('../util/payment_validation');
 
 exports.myfatoorah_payment_details = async (req, res, next) => {
     try {
         const { query } = req;
         const { key, keyType } = query;
 
-        if (!key || !keyType) {
-            return res.status(400).json({ message: 'invalid data' });
+        const errors = validateStatusKey(key, keyType);
+        if (errors.length > 0) {
+            return res.status(400).json({ message: errors.join(', ') });
         }
 
         console.log('payment status request key', key, ' keyType', keyType);

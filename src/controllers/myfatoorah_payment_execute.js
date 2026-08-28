@@ -1,5 +1,6 @@
 const TAG = "myfatoorah_payment_execute";
 const { executePayment, getPaymentStatus } = require('../integrations/my_fatoorah');
+const { sanitizeInvoiceItems, validateCheckout } = require('../util/payment_validation');
 const { JsonDB, Config } = require('node-json-db');
 const db = new JsonDB(new Config("localdb", true, false, '/'));
 
@@ -11,13 +12,18 @@ exports.myfatoorah_payment_execute = async (req, res, next) => {
             customerMobile, customerEmail,
             invoiceItems, invoiceValue,
             customerReference, countryId,
-            language, callBackUrl, errorUrl,
+            language,
             userDefinedField
         } = body;
 
+        const errors = validateCheckout(body, { requirePaymentMethod: true });
+        if (errors.length > 0) {
+            return res.status(400).json({ message: errors.join(', ') });
+        }
+
         const gatewayExecuteRequest = {
-            invoiceValue,
-            paymentMethodId,
+            invoiceValue: Number(invoiceValue),
+            paymentMethodId: Number(paymentMethodId),
             countryId
         };
 
@@ -31,12 +37,10 @@ exports.myfatoorah_payment_execute = async (req, res, next) => {
             optional.CustomerMobile = customerMobile;
         }
 
-        if (callBackUrl) {
-            optional.CallBackUrl = callBackUrl;
-        }
-
-        if (errorUrl) {
-            optional.ErrorUrl = errorUrl;
+        const callbackRoot = (process.env.APP_BASE_URL || '').replace(/\/$/, '');
+        if (callbackRoot) {
+            optional.CallBackUrl = `${callbackRoot}/myfatoorah/callback/success`;
+            optional.ErrorUrl = `${callbackRoot}/myfatoorah/callback/error`;
         }
 
         if (customerEmail) {
@@ -48,7 +52,7 @@ exports.myfatoorah_payment_execute = async (req, res, next) => {
         }
 
         if (invoiceItems) {
-            optional.InvoiceItems = invoiceItems;
+            optional.InvoiceItems = sanitizeInvoiceItems(invoiceItems);
         }
 
         if (userDefinedField) {
@@ -66,12 +70,12 @@ exports.myfatoorah_payment_execute = async (req, res, next) => {
         const myFatoorahBody = await myFatoorahResponse.json();
 
         if (!myFatoorahResponse.ok) {
-            console.log(TAG, 'myfatoorah payment error', user.id, myFatoorahResponse.status, myFatoorahBody.Message);
+            console.log(TAG, 'myfatoorah payment error', myFatoorahResponse.status, myFatoorahBody.Message);
             return res.status(400).json({ message: 'Failed to create payment' });
         }
 
         if (!myFatoorahBody.IsSuccess) {
-            console.log(TAG, 'myfatoorah payment error', user.id, myFatoorahResponse.status, myFatoorahBody.Message);
+            console.log(TAG, 'myfatoorah payment error', myFatoorahResponse.status, myFatoorahBody.Message);
             return res.status(400).json({ message: 'Failed to create payment' });
         }
 
