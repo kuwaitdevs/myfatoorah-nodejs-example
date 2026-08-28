@@ -16,7 +16,7 @@ app.use(expressLayouts);
 app.use("/", require("./router/page"));
 app.use("/api/v1", require("./router/api"));
 
-app.all("/*", (_req, res, _next) => {
+app.use((_req, res) => {
     res.status(404).json({ message: "not found" });
 });
 
